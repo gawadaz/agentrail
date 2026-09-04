@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import yaml from 'js-yaml';
@@ -124,5 +124,50 @@ describe('agentrail init', () => {
 
     expect(existsSync(join(dir, '.agentrail', 'config.yaml'))).toBe(false);
     expect(errors.join('')).toContain('interactive terminal');
+  });
+});
+
+describe('agentrail workflows', () => {
+  it('reports no workflows found when the directory does not exist', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'agentrail-cli-'));
+    dirs.push(dir);
+    const output: string[] = [];
+    const program = createProgram({
+      exec: fakeExec,
+      registry: fakeRegistry,
+      cwd: () => dir,
+      stdout: (t) => output.push(t),
+    });
+
+    await program.parseAsync(['node', 'agentrail', 'workflows']);
+
+    expect(output.join('')).toContain('No workflows found');
+  });
+
+  it('lists valid and invalid workflows found in .agentrail/workflows', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'agentrail-cli-'));
+    dirs.push(dir);
+    const workflowsDir = join(dir, '.agentrail', 'workflows');
+    mkdirSync(workflowsDir, { recursive: true });
+    writeFileSync(
+      join(workflowsDir, 'feature.yaml'),
+      'name: feature\nsteps:\n  - name: plan\n    provider: claude\n    task: create-plan\n'
+    );
+    writeFileSync(join(workflowsDir, 'broken.yaml'), 'name: broken\nsteps: []\n');
+
+    const output: string[] = [];
+    const program = createProgram({
+      exec: fakeExec,
+      registry: fakeRegistry,
+      cwd: () => dir,
+      stdout: (t) => output.push(t),
+    });
+
+    await program.parseAsync(['node', 'agentrail', 'workflows']);
+
+    const text = output.join('');
+    expect(text).toContain('✓ feature');
+    expect(text).toContain('✗ broken');
+    expect(text).toContain('"steps" is required and must be a non-empty array');
   });
 });

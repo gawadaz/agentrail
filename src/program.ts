@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import { scanAll } from './discovery/scan.js';
 import { formatReport } from './report/format.js';
 import { writeConfig } from './config/writeConfig.js';
+import { listWorkflows } from './workflow/listWorkflows.js';
+import { formatWorkflowsReport } from './report/format.js';
 import type { ExecFn, ProviderAdapter, ProviderStatus } from './discovery/types.js';
 
 export interface ProgramDeps {
@@ -38,6 +40,14 @@ export function createProgram(deps: ProgramDeps): Command {
     .action(async () => {
       const statuses = await scanAll(deps.registry, deps.exec);
       write(formatReport(statuses));
+    });
+
+  program
+    .command('workflows')
+    .description('List workflows defined in .agentrail/workflows/')
+    .action(() => {
+      const entries = listWorkflows(cwd());
+      write(formatWorkflowsReport(entries));
     });
 
   program
