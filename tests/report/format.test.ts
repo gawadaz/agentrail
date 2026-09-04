@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { formatReport } from '../../src/report/format.js';
+import { formatReport, formatWorkflowsReport } from '../../src/report/format.js';
 import type { ProviderStatus } from '../../src/discovery/types.js';
+import type { WorkflowListEntry } from '../../src/workflow/listWorkflows.js';
 
 describe('formatReport', () => {
   it('renders an installed, authenticated provider', () => {
@@ -56,5 +57,34 @@ describe('formatReport', () => {
 
     expect(output).toContain('Authenticated: unknown');
     expect(output).not.toContain('Authenticated: unknown (');
+  });
+});
+
+describe('formatWorkflowsReport', () => {
+  it('reports when no workflows are found', () => {
+    expect(formatWorkflowsReport([])).toBe('No workflows found in .agentrail/workflows/\n');
+  });
+
+  it('renders a valid workflow with a checkmark', () => {
+    const entries: WorkflowListEntry[] = [
+      { name: 'feature', path: '/proj/.agentrail/workflows/feature.yaml', valid: true },
+    ];
+
+    expect(formatWorkflowsReport(entries)).toBe('✓ feature\n');
+  });
+
+  it('renders an invalid workflow with its errors indented', () => {
+    const entries: WorkflowListEntry[] = [
+      {
+        name: 'broken',
+        path: '/proj/.agentrail/workflows/broken.yaml',
+        valid: false,
+        errors: ['"steps" is required and must be a non-empty array'],
+      },
+    ];
+
+    const output = formatWorkflowsReport(entries);
+    expect(output).toContain('✗ broken');
+    expect(output).toContain('  "steps" is required and must be a non-empty array');
   });
 });

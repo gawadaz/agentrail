@@ -1,4 +1,5 @@
 import type { ProviderStatus } from '../discovery/types.js';
+import type { WorkflowListEntry } from '../workflow/listWorkflows.js';
 
 export function formatReport(statuses: ProviderStatus[]): string {
   const lines: string[] = ['Scanning installed AI coding providers...', ''];
@@ -20,4 +21,25 @@ export function formatReport(statuses: ProviderStatus[]): string {
   }
 
   return lines.join('\n').trimEnd() + '\n';
+}
+
+export function formatWorkflowsReport(entries: WorkflowListEntry[]): string {
+  if (entries.length === 0) {
+    return 'No workflows found in .agentrail/workflows/\n';
+  }
+
+  const lines: string[] = [];
+
+  for (const entry of entries) {
+    if (entry.valid) {
+      lines.push(`✓ ${entry.name}`);
+      continue;
+    }
+    lines.push(`✗ ${entry.name}`);
+    for (const error of entry.errors ?? []) {
+      lines.push(`  ${error}`);
+    }
+  }
+
+  return lines.join('\n') + '\n';
 }
