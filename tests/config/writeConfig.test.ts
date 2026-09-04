@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import yaml from 'js-yaml';
@@ -71,5 +71,35 @@ describe('writeConfig', () => {
     const second = writeConfig(dir, statuses, { force: true });
 
     expect(second.wrote).toBe(true);
+  });
+});
+
+describe('writeConfig template scaffolding', () => {
+  it('copies starter workflow templates into .agentrail/workflows on a fresh init', () => {
+    const dir = makeTmpDir();
+
+    writeConfig(dir, statuses);
+
+    const workflowsDir = join(dir, '.agentrail', 'workflows');
+    expect(existsSync(join(workflowsDir, 'feature.yaml'))).toBe(true);
+    expect(existsSync(join(workflowsDir, 'bugfix.yaml'))).toBe(true);
+    expect(existsSync(join(workflowsDir, 'review.yaml'))).toBe(true);
+
+    const feature = yaml.load(
+      readFileSync(join(workflowsDir, 'feature.yaml'), 'utf-8')
+    ) as { name: string };
+    expect(feature.name).toBe('feature');
+  });
+
+  it('does not overwrite an existing workflow file, even with force', () => {
+    const dir = makeTmpDir();
+    writeConfig(dir, statuses);
+
+    const featurePath = join(dir, '.agentrail', 'workflows', 'feature.yaml');
+    writeFileSync(featurePath, 'name: my-custom-feature\nsteps: []\n');
+
+    writeConfig(dir, statuses, { force: true });
+
+    expect(readFileSync(featurePath, 'utf-8')).toBe('name: my-custom-feature\nsteps: []\n');
   });
 });

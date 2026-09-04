@@ -1,0 +1,22 @@
+name: review
+
+steps:
+  - name: analyze-diff
+    provider: codex
+    task: analyze-diff
+
+  - name: code-review
+    provider: codex
+    task: code-review
+
+  - name: security-review
+    provider: claude
+    task: security-review
+
+  - name: test-coverage-review
+    provider: gemini
+    task: test-coverage-review
+
+  - name: summary
+    provider: claude
+    task: summary

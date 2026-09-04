@@ -1,0 +1,34 @@
+name: feature
+
+steps:
+  - name: analyze
+    provider: gemini
+    task: analyze-requirements
+
+  - name: plan
+    provider: claude
+    task: create-plan
+
+  - name: review-plan
+    provider: codex
+    task: review-plan
+
+  - name: implement
+    provider: claude
+    task: implement
+
+  - name: tests
+    provider: gemini
+    task: write-tests
+
+  - name: code-review
+    provider: codex
+    task: code-review
+
+  - name: documentation
+    provider: gemini
+    task: update-documentation
+
+  - name: final-review
+    provider: claude
+    task: final-review

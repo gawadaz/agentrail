@@ -1,12 +1,34 @@
-import { mkdirSync, existsSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, existsSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import type { ProviderStatus } from '../discovery/types.js';
+
+const TEMPLATES_DIR = join(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  'templates',
+  'workflows'
+);
 
 export interface WriteConfigResult {
   wrote: boolean;
   path: string;
   reason?: string;
+}
+
+function scaffoldWorkflowTemplates(workflowsDir: string): void {
+  if (!existsSync(TEMPLATES_DIR)) {
+    return;
+  }
+  for (const file of readdirSync(TEMPLATES_DIR)) {
+    const dest = join(workflowsDir, file);
+    if (existsSync(dest)) {
+      continue;
+    }
+    copyFileSync(join(TEMPLATES_DIR, file), dest);
+  }
 }
 
 export function writeConfig(
@@ -25,9 +47,12 @@ export function writeConfig(
     };
   }
 
-  mkdirSync(join(agentrailDir, 'workflows'), { recursive: true });
+  const workflowsDir = join(agentrailDir, 'workflows');
+  mkdirSync(workflowsDir, { recursive: true });
   mkdirSync(join(agentrailDir, 'tasks'), { recursive: true });
   mkdirSync(join(agentrailDir, 'runs'), { recursive: true });
+
+  scaffoldWorkflowTemplates(workflowsDir);
 
   const providers: Record<string, Record<string, unknown>> = {};
   for (const status of statuses) {

@@ -1,0 +1,26 @@
+name: bugfix
+
+steps:
+  - name: analyze-bug
+    provider: gemini
+    task: analyze-bug
+
+  - name: find-root-cause
+    provider: claude
+    task: find-root-cause
+
+  - name: propose-fix
+    provider: claude
+    task: propose-fix
+
+  - name: implement
+    provider: claude
+    task: implement
+
+  - name: regression-tests
+    provider: gemini
+    task: write-regression-tests
+
+  - name: review
+    provider: codex
+    task: code-review
