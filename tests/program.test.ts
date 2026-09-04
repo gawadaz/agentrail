@@ -1,7 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import yaml from 'js-yaml';
 import { createProgram } from '../src/program.js';
 import type { ExecFn, ProviderAdapter } from '../src/discovery/types.js';
 
@@ -43,7 +44,7 @@ describe('agentrail providers', () => {
 });
 
 describe('agentrail init', () => {
-  it('writes .agentrail/config.yaml in the given cwd', async () => {
+  it('writes .agentrail/config.yaml with only the selected providers', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'agentrail-cli-'));
     dirs.push(dir);
     const output: string[] = [];
@@ -52,12 +53,33 @@ describe('agentrail init', () => {
       registry: fakeRegistry,
       cwd: () => dir,
       stdout: (t) => output.push(t),
+      isInteractive: () => true,
+      promptSelect: async (statuses) => statuses,
     });
 
     await program.parseAsync(['node', 'agentrail', 'init']);
 
     expect(existsSync(join(dir, '.agentrail', 'config.yaml'))).toBe(true);
     expect(output.join('')).toContain('Wrote');
+  });
+
+  it('writes an empty providers map when nothing is selected', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'agentrail-cli-'));
+    dirs.push(dir);
+    const output: string[] = [];
+    const program = createProgram({
+      exec: fakeExec,
+      registry: fakeRegistry,
+      cwd: () => dir,
+      stdout: (t) => output.push(t),
+      isInteractive: () => true,
+      promptSelect: async () => [],
+    });
+
+    await program.parseAsync(['node', 'agentrail', 'init']);
+
+    const content = readFileSync(join(dir, '.agentrail', 'config.yaml'), 'utf-8');
+    expect(yaml.load(content)).toEqual({ providers: {} });
   });
 
   it('skips writing when config.yaml already exists and --force is not passed', async () => {
@@ -70,6 +92,8 @@ describe('agentrail init', () => {
         registry: fakeRegistry,
         cwd: () => dir,
         stdout: (t) => output.push(t),
+        isInteractive: () => true,
+        promptSelect: async (statuses) => statuses,
       });
 
     await makeProgram().parseAsync(['node', 'agentrail', 'init']);
@@ -77,5 +101,28 @@ describe('agentrail init', () => {
     await makeProgram().parseAsync(['node', 'agentrail', 'init']);
 
     expect(output.join('')).toContain('Skipped');
+  });
+
+  it('errors without writing when not run in an interactive terminal', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'agentrail-cli-'));
+    dirs.push(dir);
+    const output: string[] = [];
+    const errors: string[] = [];
+    const program = createProgram({
+      exec: fakeExec,
+      registry: fakeRegistry,
+      cwd: () => dir,
+      stdout: (t) => output.push(t),
+      stderr: (t) => errors.push(t),
+      isInteractive: () => false,
+      promptSelect: async (statuses) => statuses,
+    });
+
+    await expect(
+      program.exitOverride().parseAsync(['node', 'agentrail', 'init'])
+    ).rejects.toThrow();
+
+    expect(existsSync(join(dir, '.agentrail', 'config.yaml'))).toBe(false);
+    expect(errors.join('')).toContain('interactive terminal');
   });
 });

@@ -2,18 +2,30 @@ import { Command } from 'commander';
 import { scanAll } from './discovery/scan.js';
 import { formatReport } from './report/format.js';
 import { writeConfig } from './config/writeConfig.js';
-import type { ExecFn, ProviderAdapter } from './discovery/types.js';
+import type { ExecFn, ProviderAdapter, ProviderStatus } from './discovery/types.js';
 
 export interface ProgramDeps {
   exec: ExecFn;
   registry: ProviderAdapter[];
   cwd?: () => string;
   stdout?: (text: string) => void;
+  stderr?: (text: string) => void;
+  isInteractive?: () => boolean;
+  promptSelect?: (statuses: ProviderStatus[]) => Promise<ProviderStatus[]>;
 }
 
 export function createProgram(deps: ProgramDeps): Command {
   const cwd = deps.cwd ?? (() => process.cwd());
   const write = deps.stdout ?? ((text: string) => process.stdout.write(text));
+  const writeErr = deps.stderr ?? ((text: string) => process.stderr.write(text));
+  const isInteractive =
+    deps.isInteractive ??
+    (() => Boolean(process.stdout.isTTY && process.stdin.isTTY));
+  const promptSelect =
+    deps.promptSelect ??
+    (() => {
+      throw new Error('promptSelect must be provided to run agentrail init');
+    });
 
   const program = new Command();
   program
@@ -36,7 +48,17 @@ export function createProgram(deps: ProgramDeps): Command {
       const statuses = await scanAll(deps.registry, deps.exec);
       write(formatReport(statuses));
 
-      const result = writeConfig(cwd(), statuses, { force: opts.force });
+      if (!isInteractive()) {
+        writeErr(
+          'agentrail init requires an interactive terminal to select providers; re-run in a TTY.\n'
+        );
+        program.error('init requires an interactive terminal');
+        return;
+      }
+
+      const selected: ProviderStatus[] = await promptSelect(statuses);
+
+      const result = writeConfig(cwd(), selected, { force: opts.force });
       if (result.wrote) {
         write(`Wrote ${result.path}\n`);
       } else {
