@@ -72,6 +72,8 @@ export function createProgram(deps: ProgramDeps): Command {
         cwd: cwd(),
       });
 
+      write(`Run files written to ${result.runDir}\n`);
+
       if (!result.ok) {
         process.exitCode = 1;
       }

@@ -220,5 +220,6 @@ describe('agentrail run', () => {
     await program.parseAsync(['node', 'agentrail', 'run', 'feature', 'add dark mode']);
 
     expect(output.join('')).toContain('Workflow "feature" completed — 1/1 steps succeeded.');
+    expect(output.join('')).toMatch(/Run files written to .*\.agentrail[\\/]runs[\\/]/);
   });
 });
