@@ -8,9 +8,12 @@ describe('realExec', () => {
     expect(result.stdout).toContain('hello');
   });
 
-  it('resolves with code -1 when the command does not exist', async () => {
+  it('resolves with a non-zero code when the command does not exist', async () => {
+    // On Windows this goes through cmd.exe (needed to resolve .cmd/.bat
+    // shims), which reports an unrecognized command as exit code 1 rather
+    // than an ENOENT spawn error.
     const result = await realExec('this-command-does-not-exist-xyz', []);
-    expect(result.code).toBe(-1);
+    expect(result.code).not.toBe(0);
   });
 
   it('times out long-running commands', async () => {
