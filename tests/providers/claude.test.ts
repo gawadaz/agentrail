@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { createClaudeAdapter } from '../../src/providers/claude/adapter.js';
+import { createClaudeAdapter, claudeAdapter } from '../../src/providers/claude/adapter.js';
+import { PROVIDER_EXECUTE_TIMEOUT_MS } from '../../src/providers/constants.js';
 
 const noopExec = async () => ({ code: 0, stdout: '', stderr: '' });
 
@@ -56,5 +57,26 @@ describe('claude adapter', () => {
     await adapter.checkAuth(noopExec);
     expect(checkedPath).toContain('custom');
     expect(checkedPath).toContain('.credentials.json');
+  });
+});
+
+describe('claudeAdapter.execute', () => {
+  it('shells out to claude with -p and --dangerously-skip-permissions', async () => {
+    const calls: Array<{ cmd: string; args: string[]; opts?: { timeoutMs?: number } }> = [];
+    const fakeExec = async (cmd: string, args: string[], opts?: { timeoutMs?: number }) => {
+      calls.push({ cmd, args, opts });
+      return { code: 0, stdout: 'done', stderr: '' };
+    };
+
+    const result = await claudeAdapter.execute('do the thing', fakeExec);
+
+    expect(calls).toEqual([
+      {
+        cmd: 'claude',
+        args: ['-p', 'do the thing', '--dangerously-skip-permissions'],
+        opts: { timeoutMs: PROVIDER_EXECUTE_TIMEOUT_MS },
+      },
+    ]);
+    expect(result).toEqual({ code: 0, stdout: 'done', stderr: '' });
   });
 });

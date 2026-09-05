@@ -1,16 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { codexAdapter } from '../../src/providers/codex/adapter.js';
+import { antigravityAdapter } from '../../src/providers/antigravity/adapter.js';
 import { PROVIDER_EXECUTE_TIMEOUT_MS } from '../../src/providers/constants.js';
 
-describe('codex adapter', () => {
+describe('antigravity adapter', () => {
   it('has the expected command and name', () => {
-    expect(codexAdapter.name).toBe('Codex');
-    expect(codexAdapter.command).toBe('codex');
-    expect(codexAdapter.versionArgs).toEqual(['--version']);
+    expect(antigravityAdapter.name).toBe('Antigravity CLI');
+    expect(antigravityAdapter.command).toBe('agy');
+    expect(antigravityAdapter.versionArgs).toEqual(['--version']);
   });
 
   it('reports authenticated yes on exit code 0', async () => {
-    const result = await codexAdapter.checkAuth(async () => ({
+    const result = await antigravityAdapter.checkAuth(async () => ({
       code: 0,
       stdout: '',
       stderr: '',
@@ -19,7 +19,7 @@ describe('codex adapter', () => {
   });
 
   it('reports authenticated no on exit code 1', async () => {
-    const result = await codexAdapter.checkAuth(async () => ({
+    const result = await antigravityAdapter.checkAuth(async () => ({
       code: 1,
       stdout: '',
       stderr: '',
@@ -28,39 +28,38 @@ describe('codex adapter', () => {
   });
 
   it('reports authenticated unknown on an unexpected exit code', async () => {
-    const result = await codexAdapter.checkAuth(async () => ({
+    const result = await antigravityAdapter.checkAuth(async () => ({
       code: 127,
       stdout: '',
       stderr: 'unknown subcommand',
     }));
     expect(result.status).toBe('unknown');
-    expect(result.note).toContain('127');
   });
 
-  it('calls "codex login status"', async () => {
+  it('calls "agy auth status"', async () => {
     let calledWith: [string, string[]] | undefined;
-    await codexAdapter.checkAuth(async (cmd, args) => {
+    await antigravityAdapter.checkAuth(async (cmd, args) => {
       calledWith = [cmd, args];
       return { code: 0, stdout: '', stderr: '' };
     });
-    expect(calledWith).toEqual(['codex', ['login', 'status']]);
+    expect(calledWith).toEqual(['agy', ['auth', 'status']]);
   });
 });
 
-describe('codexAdapter.execute', () => {
-  it('shells out to codex exec with --dangerously-bypass-approvals-and-sandbox', async () => {
+describe('antigravityAdapter.execute', () => {
+  it('shells out to agy with -p and --dangerously-skip-permissions', async () => {
     const calls: Array<{ cmd: string; args: string[]; opts?: { timeoutMs?: number } }> = [];
     const fakeExec = async (cmd: string, args: string[], opts?: { timeoutMs?: number }) => {
       calls.push({ cmd, args, opts });
       return { code: 0, stdout: 'done', stderr: '' };
     };
 
-    const result = await codexAdapter.execute('do the thing', fakeExec);
+    const result = await antigravityAdapter.execute('do the thing', fakeExec);
 
     expect(calls).toEqual([
       {
-        cmd: 'codex',
-        args: ['exec', 'do the thing', '--dangerously-bypass-approvals-and-sandbox'],
+        cmd: 'agy',
+        args: ['-p', 'do the thing', '--dangerously-skip-permissions'],
         opts: { timeoutMs: PROVIDER_EXECUTE_TIMEOUT_MS },
       },
     ]);

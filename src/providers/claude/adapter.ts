@@ -2,6 +2,7 @@ import { existsSync as realExistsSync } from 'node:fs';
 import { homedir as realHomedir } from 'node:os';
 import { join } from 'node:path';
 import type { ProviderAdapter } from '../../discovery/types.js';
+import { PROVIDER_EXECUTE_TIMEOUT_MS } from '../constants.js';
 
 export interface ClaudeAdapterDeps {
   existsSync: (path: string) => boolean;
@@ -35,6 +36,11 @@ export function createClaudeAdapter(
       }
 
       return { status: 'no', note: 'no credentials file or ANTHROPIC_API_KEY' };
+    },
+    async execute(prompt, exec) {
+      return exec('claude', ['-p', prompt, '--dangerously-skip-permissions'], {
+        timeoutMs: PROVIDER_EXECUTE_TIMEOUT_MS,
+      });
     },
   };
 }
