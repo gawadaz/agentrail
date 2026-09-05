@@ -33,4 +33,5 @@ export interface ProviderAdapter {
   versionArgs: string[];
   parseVersion?: (stdout: string) => string | undefined;
   checkAuth: (exec: ExecFn) => Promise<AuthCheckResult>;
+  execute: (prompt: string, exec: ExecFn) => Promise<ExecResult>;
 }

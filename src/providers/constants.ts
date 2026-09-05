@@ -1,0 +1,1 @@
+export const PROVIDER_EXECUTE_TIMEOUT_MS = 30 * 60 * 1000;
