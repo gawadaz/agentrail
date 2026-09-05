@@ -69,6 +69,7 @@ export function createProgram(deps: ProgramDeps): Command {
         registry: deps.registry,
         exec: deps.exec,
         write,
+        cwd: cwd(),
       });
 
       if (!result.ok) {
