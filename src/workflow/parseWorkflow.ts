@@ -102,24 +102,28 @@ export function parseWorkflow(raw: unknown): ParseWorkflowResult {
       }
 
       let output: string | undefined;
+      let outputOk = true;
       if ('output' in rawStep) {
         if (!isNonEmptyString(rawStep.output)) {
           errors.push(`${stepLabel}: "output" must be a non-empty string`);
+          outputOk = false;
         } else {
           output = rawStep.output;
         }
       }
 
       let context: string[] | undefined;
+      let contextOk = true;
       if ('context' in rawStep) {
         if (!isStringArray(rawStep.context)) {
           errors.push(`${stepLabel}: "context" must be an array of non-empty strings`);
+          contextOk = false;
         } else {
           context = rawStep.context;
         }
       }
 
-      if (hasName && providerOk && taskOk && !errors.some((e) => e.startsWith(stepLabel))) {
+      if (hasName && providerOk && taskOk && outputOk && contextOk) {
         steps.push({
           name: rawStep.name as string,
           provider: rawStep.provider as string,
