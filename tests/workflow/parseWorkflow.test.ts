@@ -134,4 +134,124 @@ describe('parseWorkflow', () => {
       ]);
     }
   });
+
+  it('accepts optional output on a shell step and output/context on a provider step', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [
+        { name: 'analyze', provider: 'claude', task: 'analyze-requirements', output: 'requirements.md' },
+        {
+          name: 'plan',
+          provider: 'claude',
+          task: 'create-plan',
+          output: 'plan.md',
+          context: ['requirements'],
+        },
+        { name: 'test', run: 'npm test', output: 'test-results.md' },
+      ],
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      workflow: {
+        name: 'feature',
+        steps: [
+          {
+            name: 'analyze',
+            provider: 'claude',
+            task: 'analyze-requirements',
+            output: 'requirements.md',
+          },
+          {
+            name: 'plan',
+            provider: 'claude',
+            task: 'create-plan',
+            output: 'plan.md',
+            context: ['requirements'],
+          },
+          { name: 'test', run: 'npm test', output: 'test-results.md' },
+        ],
+      },
+    });
+  });
+
+  it('omits output/context from the parsed step when not provided', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'plan', provider: 'claude', task: 'create-plan' }],
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      workflow: {
+        name: 'feature',
+        steps: [{ name: 'plan', provider: 'claude', task: 'create-plan' }],
+      },
+    });
+  });
+
+  it('rejects a non-string output', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'plan', provider: 'claude', task: 'create-plan', output: 123 }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain(
+        'step 1 ("plan"): "output" must be a non-empty string'
+      );
+    }
+  });
+
+  it('rejects an empty output', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'plan', provider: 'claude', task: 'create-plan', output: '' }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain(
+        'step 1 ("plan"): "output" must be a non-empty string'
+      );
+    }
+  });
+
+  it('rejects a context that is not an array', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'plan', provider: 'claude', task: 'create-plan', context: 'requirements' }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain(
+        'step 1 ("plan"): "context" must be an array of non-empty strings'
+      );
+    }
+  });
+
+  it('rejects a context array containing a non-string element', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'plan', provider: 'claude', task: 'create-plan', context: ['requirements', 5] }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain(
+        'step 1 ("plan"): "context" must be an array of non-empty strings'
+      );
+    }
+  });
+
+  it('rejects context on a shell step', () => {
+    const result = parseWorkflow({
+      name: 'feature',
+      steps: [{ name: 'test', run: 'npm test', context: ['requirements'] }],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors).toContain(
+        'step 1 ("test"): "context" is only valid on provider steps, not "run" steps'
+      );
+    }
+  });
 });

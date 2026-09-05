@@ -2,11 +2,14 @@ export interface ProviderStep {
   name: string;
   provider: string;
   task: string;
+  output?: string;
+  context?: string[];
 }
 
 export interface ShellStep {
   name: string;
   run: string;
+  output?: string;
 }
 
 export type WorkflowStep = ProviderStep | ShellStep;

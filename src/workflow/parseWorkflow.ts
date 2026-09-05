@@ -12,6 +12,10 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => isNonEmptyString(v));
+}
+
 export function parseWorkflow(raw: unknown): ParseWorkflowResult {
   if (!isPlainObject(raw)) {
     return { ok: false, errors: ['workflow must be a YAML mapping (object) at the top level'] };
@@ -65,8 +69,24 @@ export function parseWorkflow(raw: unknown): ParseWorkflowResult {
         errors.push(`${stepLabel}: "run" must be a non-empty string`);
         return;
       }
+      if ('context' in rawStep) {
+        errors.push(`${stepLabel}: "context" is only valid on provider steps, not "run" steps`);
+        return;
+      }
+      let output: string | undefined;
+      if ('output' in rawStep) {
+        if (!isNonEmptyString(rawStep.output)) {
+          errors.push(`${stepLabel}: "output" must be a non-empty string`);
+          return;
+        }
+        output = rawStep.output;
+      }
       if (hasName) {
-        steps.push({ name: rawStep.name as string, run: rawStep.run as string });
+        steps.push({
+          name: rawStep.name as string,
+          run: rawStep.run as string,
+          ...(output !== undefined ? { output } : {}),
+        });
       }
       return;
     }
@@ -80,11 +100,32 @@ export function parseWorkflow(raw: unknown): ParseWorkflowResult {
       if (!taskOk) {
         errors.push(`${stepLabel}: "task" is required and must be a non-empty string`);
       }
-      if (hasName && providerOk && taskOk) {
+
+      let output: string | undefined;
+      if ('output' in rawStep) {
+        if (!isNonEmptyString(rawStep.output)) {
+          errors.push(`${stepLabel}: "output" must be a non-empty string`);
+        } else {
+          output = rawStep.output;
+        }
+      }
+
+      let context: string[] | undefined;
+      if ('context' in rawStep) {
+        if (!isStringArray(rawStep.context)) {
+          errors.push(`${stepLabel}: "context" must be an array of non-empty strings`);
+        } else {
+          context = rawStep.context;
+        }
+      }
+
+      if (hasName && providerOk && taskOk && !errors.some((e) => e.startsWith(stepLabel))) {
         steps.push({
           name: rawStep.name as string,
           provider: rawStep.provider as string,
           task: rawStep.task as string,
+          ...(output !== undefined ? { output } : {}),
+          ...(context !== undefined ? { context } : {}),
         });
       }
       return;
