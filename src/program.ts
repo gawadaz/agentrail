@@ -4,6 +4,8 @@ import { formatReport } from './report/format.js';
 import { writeConfig } from './config/writeConfig.js';
 import { listWorkflows } from './workflow/listWorkflows.js';
 import { formatWorkflowsReport } from './report/format.js';
+import { loadWorkflow } from './workflow/loadWorkflow.js';
+import { runWorkflow } from './orchestrator/runWorkflow.js';
 import type { ExecFn, ProviderAdapter, ProviderStatus } from './discovery/types.js';
 
 export interface ProgramDeps {
@@ -48,6 +50,30 @@ export function createProgram(deps: ProgramDeps): Command {
     .action(() => {
       const entries = listWorkflows(cwd());
       write(formatWorkflowsReport(entries));
+    });
+
+  program
+    .command('run')
+    .description('Run a workflow against real provider CLIs and shell commands')
+    .argument('<workflow>', 'workflow name (from .agentrail/workflows/<name>.yaml)')
+    .argument('<task>', 'task description passed to every provider step')
+    .action(async (workflowName: string, task: string) => {
+      const loaded = loadWorkflow(cwd(), workflowName);
+      if (!loaded.ok) {
+        writeErr(loaded.errors.join('\n') + '\n');
+        program.error(`Failed to load workflow "${workflowName}"`);
+        return;
+      }
+
+      const result = await runWorkflow(loaded.workflow, task, {
+        registry: deps.registry,
+        exec: deps.exec,
+        write,
+      });
+
+      if (!result.ok) {
+        process.exitCode = 1;
+      }
     });
 
   program
