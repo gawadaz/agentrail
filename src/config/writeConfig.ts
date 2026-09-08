@@ -4,13 +4,23 @@ import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 import type { ProviderStatus } from '../discovery/types.js';
 
-const TEMPLATES_DIR = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..',
-  '..',
-  'templates',
-  'workflows'
-);
+const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Locate the bundled workflow templates. Order of candidates:
+ *   1. <moduleDir>/templates/workflows        — bundled skill layout (cli.js + templates/)
+ *   2. <moduleDir>/../../templates/workflows   — tsc dist/ layout (dist/config/writeConfig.js)
+ * Falls back to candidate 2 so callers still get a stable path to log.
+ */
+export function resolveTemplatesDir(moduleDir: string = MODULE_DIR): string {
+  const candidates = [
+    join(moduleDir, 'templates', 'workflows'),
+    join(moduleDir, '..', '..', 'templates', 'workflows'),
+  ];
+  return candidates.find((dir) => existsSync(dir)) ?? candidates[1];
+}
+
+const TEMPLATES_DIR = resolveTemplatesDir();
 
 export interface WriteConfigResult {
   wrote: boolean;
