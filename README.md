@@ -50,8 +50,37 @@ A provider only needs to be installed for the steps that reference it.
 
 ## Installation
 
+### As a Claude Code skill (recommended)
+
+Install into the current repo:
+
 ```bash
-git clone https://github.com/<org>/agentrail.git
+curl -fsSL https://raw.githubusercontent.com/gawadaz/agentrail/main/install.sh | sh
+```
+
+Globally (available in every project):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/gawadaz/agentrail/main/install.sh | sh -s -- --global
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/gawadaz/agentrail/main/install.ps1 | iex
+# global install:
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/gawadaz/agentrail/main/install.ps1))) -Global
+```
+
+This drops a self-contained skill into `.claude/skills/agentrail/` (or
+`~/.claude/skills/agentrail/`). Requires Node.js >= 18 on your PATH. Reload
+Claude Code, then ask it to "set up an AgentRail workflow". Uninstall with
+`rm -rf .claude/skills/agentrail`.
+
+### From source
+
+```bash
+git clone https://github.com/gawadaz/agentrail.git
 cd agentrail
 npm install
 npm run build
