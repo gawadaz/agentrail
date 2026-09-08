@@ -133,7 +133,7 @@ POSIX `sh` (not bash-only). Behaviour:
 2. Check `node --version` ≥ 18. If missing or older, print a clear warning that
    the skill will not run without it, but continue the install.
 3. Resolve the download URL:
-   - latest: `https://github.com/<org>/agentrail/releases/latest/download/agentrail-skill.tar.gz`
+   - latest: `https://github.com/gawadaz/agentrail/releases/latest/download/agentrail-skill.tar.gz`
    - pinned: `.../releases/download/<version>/agentrail-skill.tar.gz`
 4. Download to a temp file with `curl -fsSL` (error out clearly on network/404).
 5. Remove any existing target dir (clean replace, not merge), recreate it,
@@ -156,7 +156,7 @@ PowerShell equivalent of `install.sh`:
   extract
 - Same clean-replace and next-steps output
 
-Invocation: `irm https://raw.githubusercontent.com/<org>/agentrail/main/install.ps1 | iex`
+Invocation: `irm https://raw.githubusercontent.com/gawadaz/agentrail/main/install.ps1 | iex`
 (with args: `& ([scriptblock]::Create((irm .../install.ps1))) -Global`).
 
 ### 5. `.github/workflows/release.yml`
