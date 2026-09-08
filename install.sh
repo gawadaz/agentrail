@@ -12,7 +12,12 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --global) SCOPE="global" ;;
     --local) SCOPE="local" ;;
-    --version) shift; VERSION="${1:-latest}" ;;
+    --version)
+      if [ $# -lt 2 ]; then
+        echo "install.sh: --version needs a value (e.g. --version v0.2.0)" >&2
+        exit 2
+      fi
+      shift; VERSION="$1" ;;
     --version=*) VERSION="${1#--version=}" ;;
     -h|--help)
       echo "Usage: install.sh [--global] [--version vX.Y.Z]"
