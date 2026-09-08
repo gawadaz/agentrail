@@ -1,0 +1,36 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      - name: Build skill bundle
+        run: npm run build:skill
+
+      - name: Package skill tarball
+        run: tar -czf agentrail-skill.tar.gz -C skill/agentrail .
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: agentrail-skill.tar.gz
+          fail_on_unmatched_files: true
