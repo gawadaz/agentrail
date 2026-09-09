@@ -67,8 +67,14 @@ tar -xzf "$TMP/skill.tar.gz" -C "$TARGET"
 
 echo "Installed AgentRail skill to $TARGET"
 echo
+echo "There is no \"agentrail\" command on your PATH - the skill is self-contained."
+echo "Run the CLI with: node \"$TARGET/cli.js\" <command>"
+echo
 echo "Next steps:"
-echo "  1. Reload Claude Code so it picks up the new skill."
-echo "  2. Ask Claude: \"set up an AgentRail workflow\" or \"run my feature workflow\"."
+echo "  1. Scaffold .agentrail/ in this project (prompts you to pick providers,"
+echo "     so run it yourself in a terminal rather than asking Claude to):"
+echo "       node \"$TARGET/cli.js\" init"
+echo "  2. Reload Claude Code so it picks up the new skill."
+echo "  3. Ask Claude: \"set up an AgentRail workflow\" or \"run my feature workflow\"."
 echo
 echo "Uninstall: rm -rf \"$TARGET\""

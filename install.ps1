@@ -60,8 +60,14 @@ try {
 
 Write-Host "Installed AgentRail skill to $target"
 Write-Host ''
+Write-Host 'There is no "agentrail" command on your PATH - the skill is self-contained.'
+Write-Host "Run the CLI with: node `"$target/cli.js`" <command>"
+Write-Host ''
 Write-Host 'Next steps:'
-Write-Host '  1. Reload Claude Code so it picks up the new skill.'
-Write-Host '  2. Ask Claude: "set up an AgentRail workflow" or "run my feature workflow".'
+Write-Host '  1. Scaffold .agentrail/ in this project (prompts you to pick providers,'
+Write-Host '     so run it yourself in a terminal rather than asking Claude to):'
+Write-Host "       node `"$target/cli.js`" init"
+Write-Host '  2. Reload Claude Code so it picks up the new skill.'
+Write-Host '  3. Ask Claude: "set up an AgentRail workflow" or "run my feature workflow".'
 Write-Host ''
 Write-Host "Uninstall: Remove-Item -Recurse -Force `"$target`""
