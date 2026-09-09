@@ -1,9 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import yaml from 'js-yaml';
 import { writeConfig } from '../../src/config/writeConfig.js';
+import { resolveTemplatesDir } from '../../src/config/writeConfig.js';
 import type { ProviderStatus } from '../../src/discovery/types.js';
 
 const dirs: string[] = [];
@@ -89,6 +90,17 @@ describe('writeConfig template scaffolding', () => {
       readFileSync(join(workflowsDir, 'feature.yaml'), 'utf-8')
     ) as { name: string };
     expect(feature.name).toBe('feature');
+  });
+
+  it('resolves templates when they sit directly beside the module (bundled skill layout)', () => {
+    const fakeSkillDir = makeTmpDir();
+    const wf = join(fakeSkillDir, 'templates', 'workflows');
+    mkdirSync(wf, { recursive: true });
+    writeFileSync(join(wf, 'feature.yaml'), 'name: feature\nsteps: []\n');
+
+    const resolved = resolveTemplatesDir(fakeSkillDir);
+
+    expect(resolved).toBe(wf);
   });
 
   it('does not overwrite an existing workflow file, even with force', () => {

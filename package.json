@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:skill": "node scripts/build-skill.mjs",
     "test": "vitest run",
     "dev": "tsx src/cli.ts"
   },
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.7.0",
+    "esbuild": "^0.24.2",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"

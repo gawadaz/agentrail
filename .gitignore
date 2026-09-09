@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .agentrail/
+.claude/worktrees/
+skill/agentrail/cli.js
+skill/agentrail/templates/
