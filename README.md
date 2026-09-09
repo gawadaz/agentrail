@@ -77,6 +77,18 @@ This drops a self-contained skill into `.claude/skills/agentrail/` (or
 Claude Code, then ask it to "set up an AgentRail workflow". Uninstall with
 `rm -rf .claude/skills/agentrail`.
 
+**The skill install does not put an `agentrail` command on your PATH.** Run the
+CLI directly instead:
+
+```bash
+node .claude/skills/agentrail/cli.js <command>      # local install
+node ~/.claude/skills/agentrail/cli.js <command>    # global install
+```
+
+You need this at least once, for `init` — it prompts for provider selection, so
+run it yourself in a terminal rather than asking Claude to. After that, Claude
+drives the CLI for you.
+
 ### From source
 
 ```bash
@@ -96,6 +108,10 @@ npm run dev -- <command> [args]
 ---
 
 ## Quick start
+
+These examples use the bare `agentrail` command, which exists only if you
+installed from source with `npm link`. With the Claude Code skill install,
+substitute `node .claude/skills/agentrail/cli.js` for `agentrail` throughout.
 
 ```bash
 # 1. From the root of the project you want to work in:
