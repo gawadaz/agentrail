@@ -1,6 +1,6 @@
 {
   "name": "agentrail",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Workflow-as-code orchestration for the AI coding subscriptions you already pay for.",
   "type": "module",
   "bin": {
